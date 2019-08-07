@@ -13,7 +13,7 @@ public class MonitorContext {
      */
     private HashMap<String, Job> THREAD_JOB_MAPPING = new HashMap<>();
 
-    private MonitorContext(){}
+    /*private MonitorContext(){}
 
     private static class MonitorContextProvider{
         private static MonitorContext monitorContext = new MonitorContext();
@@ -21,7 +21,7 @@ public class MonitorContext {
 
     public static MonitorContext getInstance(){
         return MonitorContextProvider.monitorContext;
-    }
+    }*/
 
     public synchronized void addMapping(String threadName,Job job){
         THREAD_JOB_MAPPING.put(threadName,job);

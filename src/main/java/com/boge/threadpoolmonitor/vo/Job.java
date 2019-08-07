@@ -8,16 +8,18 @@ public class Job implements Runnable{
 
     private String name;
 
-    public Job(Long executeTime, String name) {
+    private MonitorContext monitorContext;
+
+    public Job(Long executeTime, String name,MonitorContext monitorContext) {
         this.executeTime = executeTime;
         this.name = name;
+        this.monitorContext = monitorContext;
     }
 
     @Override
     public void run() {
         String threadName = Thread.currentThread().getName();
         System.out.println("【任务:" + name + "由线程:"+threadName+"执行!】");
-        MonitorContext monitorContext = MonitorContext.getInstance();
         monitorContext.addMapping(threadName,this);
         while(executeTime > 0) {
             //System.out.println("任务:" + name + "执行进度:" + executeTime--);

@@ -1,7 +1,7 @@
 package com.boge.threadpoolmonitor;
 
 import com.boge.threadpoolmonitor.factory.JobFactory;
-import com.boge.threadpoolmonitor.factory.MonitorThreadFactory;
+import com.boge.threadpoolmonitor.threadpool.MonitorThreadPoolExecutor;
 import com.boge.threadpoolmonitor.vo.Job;
 import com.boge.threadpoolmonitor.vo.ThreadPoolVO;
 
@@ -9,6 +9,12 @@ import java.util.HashSet;
 import java.util.concurrent.*;
 
 public class Monitor{
+
+   private MonitorContext monitorContext;
+
+   public Monitor(MonitorContext monitorContext){
+       this.monitorContext = monitorContext;
+   }
 
    public void monite(ThreadPoolExecutor threadPoolExecutor){
        ThreadPoolVO threadPoolVO = new ThreadPoolVO(threadPoolExecutor);
@@ -37,7 +43,6 @@ public class Monitor{
    }
 
    private String printThreadContent(HashSet<String> threadNames){
-       MonitorContext monitorContext = MonitorContext.getInstance();
        StringBuilder stringBuilder = new StringBuilder();
        for(String threadName:threadNames){
            Job job = monitorContext.getJobName(threadName);
@@ -88,12 +93,13 @@ public class Monitor{
 
     public static void main(String[] args) {
         ThreadPoolExecutor threadPoolExecutor = new MonitorThreadPoolExecutor(1,2,5000, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<>(3));
-        threadPoolExecutor.execute(JobFactory.getJob(5L));
-        threadPoolExecutor.execute(JobFactory.getJob(5L));
-        threadPoolExecutor.execute(JobFactory.getJob(5L));
-        threadPoolExecutor.execute(JobFactory.getJob(5L));
-        threadPoolExecutor.execute(JobFactory.getJob(5L));
+        MonitorContext monitorContext = new MonitorContext();
+        threadPoolExecutor.execute(JobFactory.getJob(5L,monitorContext));
+        threadPoolExecutor.execute(JobFactory.getJob(5L,monitorContext));
+        threadPoolExecutor.execute(JobFactory.getJob(5L,monitorContext));
+        threadPoolExecutor.execute(JobFactory.getJob(5L,monitorContext));
+        threadPoolExecutor.execute(JobFactory.getJob(5L,monitorContext));
         threadPoolExecutor.allowCoreThreadTimeOut(true);
-        new Monitor().monite(threadPoolExecutor);
+        new Monitor(monitorContext).monite(threadPoolExecutor);
    }
 }

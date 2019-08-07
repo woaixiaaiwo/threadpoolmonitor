@@ -1,4 +1,4 @@
-package com.boge.threadpoolmonitor;
+package com.boge.threadpoolmonitor.threadpool;
 
 import com.boge.threadpoolmonitor.factory.MonitorThreadFactory;
 
