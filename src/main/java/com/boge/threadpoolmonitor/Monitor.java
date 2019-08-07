@@ -39,7 +39,6 @@ public class Monitor{
    private String printThreadContent(HashSet<String> threadNames){
        MonitorContext monitorContext = MonitorContext.getInstance();
        StringBuilder stringBuilder = new StringBuilder();
-       int i=0;
        for(String threadName:threadNames){
            Job job = monitorContext.getJobName(threadName);
            if(job != null){

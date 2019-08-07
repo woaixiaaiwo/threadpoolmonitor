@@ -2,6 +2,7 @@ package com.boge.threadpoolmonitor;
 
 import com.boge.threadpoolmonitor.vo.Job;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -10,7 +11,7 @@ public class MonitorContext {
     /**
      * 线程-任务映射关系
      */
-    private ConcurrentHashMap<String, Job> THREAD_JOB_MAPPING = new ConcurrentHashMap<>();
+    private HashMap<String, Job> THREAD_JOB_MAPPING = new HashMap<>();
 
     private MonitorContext(){}
 
@@ -22,7 +23,7 @@ public class MonitorContext {
         return MonitorContextProvider.monitorContext;
     }
 
-    public void addMapping(String threadName,Job job){
+    public synchronized void addMapping(String threadName,Job job){
         THREAD_JOB_MAPPING.put(threadName,job);
     }
 
@@ -31,12 +32,13 @@ public class MonitorContext {
     }
 
     public void removeJob(Job job){
-        for(Map.Entry<String,Job> entry:THREAD_JOB_MAPPING.entrySet()){
-            if(entry.getValue() == job){
-                THREAD_JOB_MAPPING.remove(entry.getKey());
+        synchronized(this){
+            for(Map.Entry<String,Job> entry:THREAD_JOB_MAPPING.entrySet()){
+                if(entry.getValue() == job){
+                    THREAD_JOB_MAPPING.remove(entry.getKey());
+                }
             }
         }
-
     }
 
 }
