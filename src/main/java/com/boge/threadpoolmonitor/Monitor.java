@@ -88,11 +88,12 @@ public class Monitor{
 
     public static void main(String[] args) {
         ThreadPoolExecutor threadPoolExecutor = new MonitorThreadPoolExecutor(1,2,5000, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<>(3));
-        threadPoolExecutor.execute(JobFactory.getJob(10L));
-        threadPoolExecutor.execute(JobFactory.getJob(10L));
-        threadPoolExecutor.execute(JobFactory.getJob(10L));
-        threadPoolExecutor.execute(JobFactory.getJob(10L));
-        threadPoolExecutor.execute(JobFactory.getJob(10L));
+        threadPoolExecutor.execute(JobFactory.getJob(5L));
+        threadPoolExecutor.execute(JobFactory.getJob(5L));
+        threadPoolExecutor.execute(JobFactory.getJob(5L));
+        threadPoolExecutor.execute(JobFactory.getJob(5L));
+        threadPoolExecutor.execute(JobFactory.getJob(5L));
+        threadPoolExecutor.allowCoreThreadTimeOut(true);
         new Monitor().monite(threadPoolExecutor);
    }
 }

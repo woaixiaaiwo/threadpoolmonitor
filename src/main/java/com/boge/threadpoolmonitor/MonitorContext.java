@@ -33,11 +33,13 @@ public class MonitorContext {
 
     public void removeJob(Job job){
         synchronized(this){
+            String removeKey = "";
             for(Map.Entry<String,Job> entry:THREAD_JOB_MAPPING.entrySet()){
                 if(entry.getValue() == job){
-                    THREAD_JOB_MAPPING.remove(entry.getKey());
+                    removeKey = entry.getKey();
                 }
             }
+            THREAD_JOB_MAPPING.remove(removeKey);
         }
     }
 

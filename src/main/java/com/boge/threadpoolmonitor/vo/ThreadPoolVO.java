@@ -1,7 +1,9 @@
 package com.boge.threadpoolmonitor.vo;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
@@ -18,6 +20,14 @@ public class ThreadPoolVO {
     private static final int COUNT_BITS = Integer.SIZE - 3;
     private static final int CAPACITY   = (1 << COUNT_BITS) - 1;
 
+    private static final int RUNNING    = -1 << COUNT_BITS;
+    private static final int SHUTDOWN   =  0 << COUNT_BITS;
+    private static final int STOP       =  1 << COUNT_BITS;
+    private static final int TIDYING    =  2 << COUNT_BITS;
+    private static final int TERMINATED =  3 << COUNT_BITS;
+
+    private static final Map<Integer,String> STATUS_MAP = new HashMap<>();
+
     private static int runStateOf(int c)     { return c & ~CAPACITY; }
     private static int workerCountOf(int c)  { return c & CAPACITY; }
 
@@ -29,6 +39,12 @@ public class ThreadPoolVO {
             CTL_FIELD.setAccessible(true);
             WORKER_FIELD.setAccessible(true);
             MAINLOCK_FIELD.setAccessible(true);
+
+            STATUS_MAP.put(RUNNING,"RUNNING");
+            STATUS_MAP.put(SHUTDOWN,"SHUTDOWN");
+            STATUS_MAP.put(STOP,"STOP");
+            STATUS_MAP.put(TIDYING,"TIDYING");
+            STATUS_MAP.put(TERMINATED,"TERMINATED");
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -53,7 +69,7 @@ public class ThreadPoolVO {
     /**
      * 状态
      */
-    private Integer status;
+    private String status;
 
     /**
      * 完成任务数
@@ -106,7 +122,7 @@ public class ThreadPoolVO {
                 workerThreadNames.add(thread.getName());
             }
             mainLock.unlock();
-            status = runStateOf(ctl.get());
+            status = STATUS_MAP.get(runStateOf(ctl.get()));
             completedTaskCount = threadPoolExecutor.getCompletedTaskCount();
             queue = threadPoolExecutor.getQueue();
         } catch (Exception e) {
@@ -130,7 +146,7 @@ public class ThreadPoolVO {
         return workCount;
     }
 
-    public Integer getStatus() {
+    public String getStatus() {
         return status;
     }
 
