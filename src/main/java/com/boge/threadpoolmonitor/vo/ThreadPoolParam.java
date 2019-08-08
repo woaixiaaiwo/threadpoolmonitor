@@ -15,6 +15,8 @@ public class ThreadPoolParam {
 
     private Boolean allowCoreThreadTimeOut;
 
+    public ThreadPoolParam(){}
+
     public ThreadPoolParam(Integer coreSize, Integer maxSize, Long keepAliveTime, Integer queueCapacity) {
         this(coreSize,maxSize,keepAliveTime,queueCapacity,false);
     }
@@ -65,5 +67,16 @@ public class ThreadPoolParam {
 
     public void setAllowCoreThreadTimeOut(Boolean allowCoreThreadTimeOut) {
         this.allowCoreThreadTimeOut = allowCoreThreadTimeOut;
+    }
+
+    @Override
+    public String toString() {
+        return "ThreadPoolParam{" +
+                "coreSize=" + coreSize +
+                ", maxSize=" + maxSize +
+                ", keepAliveTime=" + keepAliveTime +
+                ", queueCapacity=" + queueCapacity +
+                ", allowCoreThreadTimeOut=" + allowCoreThreadTimeOut +
+                '}';
     }
 }

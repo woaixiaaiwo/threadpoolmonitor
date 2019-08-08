@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ThreadPoolContainer {
 
     @Value("${monitorTimeout:5}")
-    private Long monitorTimeout = 5L;
+    private Long monitorTimeout;
 
     private final static ConcurrentHashMap<String, Monitor> MONITORS = new ConcurrentHashMap<>();
 
@@ -37,7 +37,7 @@ public class ThreadPoolContainer {
     public void monite(String requestId){
         Monitor monitor = MONITORS.get(requestId);
         if(monitor != null){
-            monitor.monite();
+            monitor.moniteInternal();
         }
     }
 
