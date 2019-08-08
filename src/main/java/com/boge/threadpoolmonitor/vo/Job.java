@@ -1,6 +1,7 @@
 package com.boge.threadpoolmonitor.vo;
 
-import com.boge.threadpoolmonitor.MonitorContext;
+import com.boge.threadpoolmonitor.monitor.MonitorContext;
+import com.boge.threadpoolmonitor.util.CommonUtil;
 
 public class Job implements Runnable{
 
@@ -24,14 +25,18 @@ public class Job implements Runnable{
         while(executeTime > 0) {
             //System.out.println("任务:" + name + "执行进度:" + executeTime--);
             executeTime--;
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            CommonUtil.sleep(1000L);
         }
         //任务完成，移除
         monitorContext.removeJob(this);
+    }
+
+    @Override
+    public String toString() {
+        return "Job{" +
+                "executeTime=" + executeTime +
+                ", name='" + name + '\'' +
+                '}';
     }
 
     public Long getExecuteTime() {

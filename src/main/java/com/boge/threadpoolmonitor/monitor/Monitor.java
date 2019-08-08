@@ -1,33 +1,94 @@
-package com.boge.threadpoolmonitor;
+package com.boge.threadpoolmonitor.monitor;
 
+import com.boge.threadpoolmonitor.ThreadPoolContainer;
 import com.boge.threadpoolmonitor.factory.JobFactory;
 import com.boge.threadpoolmonitor.threadpool.MonitorThreadPoolExecutor;
+import com.boge.threadpoolmonitor.util.CommonUtil;
 import com.boge.threadpoolmonitor.vo.Job;
+import com.boge.threadpoolmonitor.vo.MonitorResponseVO;
 import com.boge.threadpoolmonitor.vo.ThreadPoolVO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.concurrent.*;
 
 public class Monitor{
 
+    private static Logger logger = LoggerFactory.getLogger(Monitor.class);
+
    private MonitorContext monitorContext;
 
-   public Monitor(MonitorContext monitorContext){
-       this.monitorContext = monitorContext;
-   }
+   private ThreadPoolExecutor threadPoolExecutor;
 
-   public void monite(ThreadPoolExecutor threadPoolExecutor){
-       ThreadPoolVO threadPoolVO = new ThreadPoolVO(threadPoolExecutor);
-       while(true){
-           threadPoolVO.refresh();
-           printState(threadPoolVO);
-           try {
-               Thread.sleep(1000);
-           } catch (InterruptedException e) {
-               e.printStackTrace();
-           }
-       }
-   }
+   private ThreadPoolVO threadPoolVO;
+
+   private volatile Long visitTimeMillis;
+
+   private Long monitorTimeout;
+
+   private Integer status;
+
+   private String name;
+
+   private String monitorId;
+
+   private final static Integer RUNNING = 1;
+   private final static Integer TIMEOUT = -1;
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public Monitor(String monitorId, ThreadPoolExecutor threadPoolExecutor,Long monitorTimeout){
+       this.monitorContext = new MonitorContext();
+       this.threadPoolExecutor = threadPoolExecutor;
+       this.visitTimeMillis = System.currentTimeMillis();
+       this.threadPoolVO = new ThreadPoolVO(threadPoolExecutor);
+       this.monitorTimeout = monitorTimeout;
+       this.status = RUNNING;
+       this.monitorId = monitorId;
+       this.name = "monitor-"+monitorId;
+       Thread checkMonitor = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true){
+                    logger.info("执行Monitor：{}监控...",name);
+                    Long current = System.currentTimeMillis();
+                    if(current - Monitor.this.visitTimeMillis >= monitorTimeout*1000){
+                        threadPoolExecutor.shutdownNow();
+                        Monitor.this.status = TIMEOUT;
+                        ThreadPoolContainer.removeMonitor(monitorId);
+                        logger.warn("【monitor:{}超时，已关闭】",name);
+                        return;
+                    }
+                    CommonUtil.sleep(monitorTimeout*1000);
+                }
+            }
+        });
+        checkMonitor.setName("checkMonitor-"+name);
+        checkMonitor.start();
+        logger.info("Monitor超时监控已启动...");
+    }
+
+    public void submitJob(Long executeTime){
+        Job job = JobFactory.getJob(executeTime,this.monitorContext,this.monitorId);
+        logger.info("新任务:【{}】被提交到monitor:{}",job,name);
+        this.threadPoolExecutor.execute(job);
+    }
+
+    public void moniteInternal(){
+       this.visitTimeMillis = System.currentTimeMillis();
+       threadPoolVO.refresh();
+       printState(threadPoolVO);
+    }
+
+    public MonitorResponseVO monite(){
+        this.visitTimeMillis = System.currentTimeMillis();
+        threadPoolVO.refresh();
+        return null;
+    }
 
 
    private void printState(ThreadPoolVO threadPoolVO){
@@ -90,16 +151,4 @@ public class Monitor{
         stringBuilder.append(total+"\n");
         return stringBuilder.toString();
     }
-
-    public static void main(String[] args) {
-        ThreadPoolExecutor threadPoolExecutor = new MonitorThreadPoolExecutor(1,2,5000, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<>(3));
-        MonitorContext monitorContext = new MonitorContext();
-        threadPoolExecutor.execute(JobFactory.getJob(5L,monitorContext));
-        threadPoolExecutor.execute(JobFactory.getJob(5L,monitorContext));
-        threadPoolExecutor.execute(JobFactory.getJob(5L,monitorContext));
-        threadPoolExecutor.execute(JobFactory.getJob(5L,monitorContext));
-        threadPoolExecutor.execute(JobFactory.getJob(5L,monitorContext));
-        threadPoolExecutor.allowCoreThreadTimeOut(true);
-        new Monitor(monitorContext).monite(threadPoolExecutor);
-   }
 }

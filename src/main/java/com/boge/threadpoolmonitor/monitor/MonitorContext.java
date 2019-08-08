@@ -1,4 +1,4 @@
-package com.boge.threadpoolmonitor;
+package com.boge.threadpoolmonitor.monitor;
 
 import com.boge.threadpoolmonitor.vo.Job;
 
