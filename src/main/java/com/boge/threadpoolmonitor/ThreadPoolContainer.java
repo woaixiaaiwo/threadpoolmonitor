@@ -3,6 +3,7 @@ package com.boge.threadpoolmonitor;
 import com.boge.threadpoolmonitor.monitor.Monitor;
 import com.boge.threadpoolmonitor.threadpool.MonitorThreadPoolExecutor;
 import com.boge.threadpoolmonitor.util.CommonUtil;
+import com.boge.threadpoolmonitor.vo.MonitorResponseVO;
 import com.boge.threadpoolmonitor.vo.ThreadPoolParam;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -34,11 +35,20 @@ public class ThreadPoolContainer {
         }
     }
 
-    public void monite(String requestId){
+    public MonitorResponseVO monite(String requestId){
         Monitor monitor = MONITORS.get(requestId);
         if(monitor != null){
-            monitor.moniteInternal();
+            return monitor.monite();
         }
+        return null;
+    }
+
+    public String moniteString(String requestId){
+        Monitor monitor = MONITORS.get(requestId);
+        if(monitor != null){
+            return monitor.moniteString();
+        }
+        return null;
     }
 
     public static void removeMonitor(String requestId){

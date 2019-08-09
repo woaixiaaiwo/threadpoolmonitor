@@ -1,0 +1,83 @@
+<html>
+<head>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<style type="text/css">
+.comments {
+ width:100%;/*自动适应父布局宽度*/
+ overflow:auto;
+ word-break:break-all;
+}
+</style>
+
+<script type="text/javascript">
+
+	function uuid() {
+	    var s = [];
+	    var hexDigits = "0123456789abcdef";
+	    for (var i = 0; i < 36; i++) {
+	        s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+	    }
+	    s[14] = "4"; // bits 12-15 of the time_hi_and_version field to 0010
+	    s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1); // bits 6-7 of the clock_seq_hi_and_reserved to 01
+	    s[8] = s[13] = s[18] = s[23] = "-";
+
+	    var uuid = s.join("");
+	    return uuid;
+	}
+
+	var uuid = uuid();
+	var timer;
+
+	function createMonitor(){
+		$.ajax({
+			url:"http://127.0.0.1:8080/monitor/createMonitor",
+			method:'POST',
+			data:{
+				requestId:uuid
+			},
+			success:function(result){
+        		timer = setInterval("monite()",1000)
+    		}
+	    });
+	}
+
+	function monite(){
+		$.ajax({
+			url:"http://127.0.0.1:8080/monitor/moniteString/"+uuid,
+			method:'GET',
+			success:function(result){
+        		//console.log(result);
+        		$("#output").val(result);
+    		},
+    		error:function(err){
+    			clearInterval(timer);
+    		}
+    	});
+	}
+
+	function submit(){
+		$.ajax({
+			url:"http://127.0.0.1:8080/monitor/submitJob",
+			method:'POST',
+			data:{
+				requestId:uuid
+			},
+			success:function(result){
+        		console.log('提交任务成功！');
+    		}
+    	});
+	}
+</script>
+</head>
+
+<body onload="createMonitor()">
+	<button type="button" onclick="submit()">submit</button>
+	<div>
+		<textarea  style="width:100%;height: 50%" id="output"></textarea>
+
+	</div>
+	
+</body>
+
+</html>
+

@@ -2,6 +2,7 @@ package com.boge.threadpoolmonitor.monitor;
 
 import com.boge.threadpoolmonitor.ThreadPoolContainer;
 import com.boge.threadpoolmonitor.factory.JobFactory;
+import com.boge.threadpoolmonitor.threadpool.MonitorRejectedExecutionHandler;
 import com.boge.threadpoolmonitor.threadpool.MonitorThreadPoolExecutor;
 import com.boge.threadpoolmonitor.util.CommonUtil;
 import com.boge.threadpoolmonitor.vo.Job;
@@ -10,8 +11,10 @@ import com.boge.threadpoolmonitor.vo.ThreadPoolVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.*;
 
 public class Monitor{
@@ -69,7 +72,7 @@ public class Monitor{
         });
         checkMonitor.setName("checkMonitor-"+name);
         checkMonitor.start();
-        logger.info("Monitor超时监控已启动...");
+        logger.info("Monitor：{}超时监控已启动...",name);
     }
 
     public void submitJob(Long executeTime){
@@ -84,23 +87,40 @@ public class Monitor{
        printState(threadPoolVO);
     }
 
-    public MonitorResponseVO monite(){
+    public String moniteString(){
         this.visitTimeMillis = System.currentTimeMillis();
         threadPoolVO.refresh();
-        return null;
+        return printState(threadPoolVO);
     }
 
 
-   private void printState(ThreadPoolVO threadPoolVO){
+    public MonitorResponseVO monite(){
+        this.visitTimeMillis = System.currentTimeMillis();
+        threadPoolVO.refresh();
+        MonitorResponseVO monitorResponseVO = new MonitorResponseVO();
+        monitorResponseVO.setThreadJobsList(getThreadJobs(threadPoolVO.getWorkerThreadNames()));
+        monitorResponseVO.setThreadCount(threadPoolVO.getWorkCount());
+        monitorResponseVO.setThreadPoolStatus(threadPoolVO.getStatus());
+        monitorResponseVO.setQueueJobList(getJobs(threadPoolVO.getQueue()));
+        monitorResponseVO.setRejectJobList(((MonitorRejectedExecutionHandler)threadPoolExecutor.getRejectedExecutionHandler()).getRejectJobs());
+        return monitorResponseVO;
+    }
+
+
+   private String printState(ThreadPoolVO threadPoolVO){
        HashSet<String> workerThreadNames = threadPoolVO.getWorkerThreadNames();
        BlockingQueue<Runnable> queue = threadPoolVO.getQueue();
-       System.out.println("----------------------------------------------------------------------");
-       System.out.println("活动线程情况："+printThreadContent(workerThreadNames));
-       System.out.println("活动线程个数："+threadPoolVO.getWorkCount());
-       System.out.println("线程池状态："+threadPoolVO.getStatus());
-       System.out.println("队列情况："+printQueue(queue));
-       System.out.println("队列任务个数："+queue.size());
-       System.out.println("----------------------------------------------------------------------");
+       StringBuilder stringBuilder = new StringBuilder();
+       stringBuilder.append("----------------------------------------------------------------------\n");
+       stringBuilder.append("活动线程情况："+printThreadContent(workerThreadNames)+"\n");
+       stringBuilder.append("活动线程个数："+threadPoolVO.getWorkCount()+"\n");
+       stringBuilder.append("线程池状态："+threadPoolVO.getStatus()+"\n");
+       stringBuilder.append("队列情况："+printQueue(queue)+"\n");
+       stringBuilder.append("队列任务个数："+queue.size()+"\n");
+       stringBuilder.append("拒绝任务："+((MonitorRejectedExecutionHandler)threadPoolExecutor.getRejectedExecutionHandler()).getRejectJobs()+"\n");
+       stringBuilder.append("----------------------------------------------------------------------\n");
+       System.out.println(stringBuilder);
+       return stringBuilder.toString();
    }
 
    private String printThreadContent(HashSet<String> threadNames){
@@ -115,6 +135,31 @@ public class Monitor{
        }
        return stringBuilder.toString();
    }
+
+    private List<MonitorResponseVO.ThreadJobs> getThreadJobs(HashSet<String> threadNames){
+        List<MonitorResponseVO.ThreadJobs> result = new ArrayList<>();
+        for(String threadName:threadNames){
+            MonitorResponseVO.ThreadJobs threadJobs = new MonitorResponseVO.ThreadJobs();
+            Job job = monitorContext.getJobName(threadName);
+            threadJobs.setThreadName(threadName);
+            if(job != null){
+                threadJobs.setJob(job);
+            }else {
+                threadJobs.setJob(null);
+            }
+            result.add(threadJobs);
+        }
+        return result;
+    }
+
+    private List<Job> getJobs(BlockingQueue<Runnable> blockingQueue){
+        List<Job> jobList = new ArrayList<>();
+        for(Runnable runnable:blockingQueue){
+            Job job = (Job)runnable;
+            jobList.add(job);
+        }
+        return jobList;
+    }
 
     private static String printQueue(BlockingQueue<Runnable> blockingQueue){
         StringBuilder stringBuilder = new StringBuilder();

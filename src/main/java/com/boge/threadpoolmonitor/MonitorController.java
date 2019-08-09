@@ -1,5 +1,6 @@
 package com.boge.threadpoolmonitor;
 
+import com.boge.threadpoolmonitor.vo.MonitorResponseVO;
 import com.boge.threadpoolmonitor.vo.ThreadPoolParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -42,19 +43,34 @@ public class MonitorController {
         }
     }
 
-    @PostMapping("/createMonitor")
+    @PostMapping("/createMonitorCustom")
     public void createMonitor(@RequestBody CreateMonitorParam createMonitorParam){
         threadPoolContainer.createMonitor(createMonitorParam.getRequestId(),createMonitorParam.getThreadPoolParam());
     }
 
-    @PostMapping("/submitJob")
-    public void createMonitor(@RequestParam("requestId")String requestId,@RequestParam("executeTime")Long executeTime){
+    @PostMapping("/createMonitor")
+    public void createMonitor(@RequestParam("requestId")String requestId){
+        ThreadPoolParam threadPoolParam = new ThreadPoolParam(1,10,5000L,10);
+        threadPoolContainer.createMonitor(requestId,threadPoolParam);
+    }
+
+    @PostMapping("/submitJobCustom")
+    public void submitJob(@RequestParam("requestId")String requestId,@RequestParam("executeTime")Long executeTime){
         threadPoolContainer.submitJob(requestId,executeTime);
     }
 
-    @GetMapping("/monite/{requestId}")
-    public void createMonitor(@PathVariable("requestId")String requestId){
-        threadPoolContainer.monite(requestId);
+    @PostMapping("/submitJob")
+    public void submitJob(@RequestParam("requestId")String requestId){
+        threadPoolContainer.submitJob(requestId,10L);
     }
 
+    @GetMapping("/monite/{requestId}")
+    public MonitorResponseVO monite(@PathVariable("requestId")String requestId){
+        return threadPoolContainer.monite(requestId);
+    }
+
+    @GetMapping("/moniteString/{requestId}")
+    public String moniteString(@PathVariable("requestId")String requestId){
+        return threadPoolContainer.moniteString(requestId);
+    }
 }

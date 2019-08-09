@@ -13,7 +13,7 @@ public class MonitorResponseVO {
 
     private List<Job> queueJobList;
 
-    private List<Job> rejectJobList;
+    private List<RejectJob> rejectJobList;
 
     public List<ThreadJobs> getThreadJobsList() {
         return threadJobsList;
@@ -47,15 +47,15 @@ public class MonitorResponseVO {
         this.queueJobList = queueJobList;
     }
 
-    public List<Job> getRejectJobList() {
+    public List<RejectJob> getRejectJobList() {
         return rejectJobList;
     }
 
-    public void setRejectJobList(List<Job> rejectJobList) {
+    public void setRejectJobList(List<RejectJob> rejectJobList) {
         this.rejectJobList = rejectJobList;
     }
 
-    public class ThreadJobs{
+    public static class ThreadJobs{
 
         private String threadName;
 
